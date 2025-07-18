@@ -8,6 +8,6 @@ rm -rf .pnpm-store
 rm -rf node_modules/.pnpm
 echo "✅ Cleaned pnpm files"
 echo "📦 Installing dependencies with npm..."
-npm ci
+npm ci --include=dev
 echo "🏗️ Building project..."
 npm run build
