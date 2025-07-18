@@ -10,22 +10,34 @@ import GameBoard from "@/components/game-board"
 import IACommentBox from "@/components/ia-comment-box"
 import SettingsPanel from "@/components/settings-panel"
 import GameSummary from "@/components/game-summary"
+import ApiKeyConfig from "@/components/api-key-config"
+import LanguageSelector from "@/components/language-selector"
+import { useLanguage } from "@/contexts/language-context"
 
 export default function GamePage() {
+  const { t, language } = useLanguage();
   const [difficulty, setDifficulty] = useState("5")
-  const [attitude, setAttitude] = useState("amistosa")
+  const [attitude, setAttitude] = useState("friendly")
   const [gameStarted, setGameStarted] = useState(false)
   const [gameEnded, setGameEnded] = useState(false)
   const [currentComment, setCurrentComment] = useState("")
   const [moveHistory, setMoveHistory] = useState<string[]>([])
+  const [userApiKey, setUserApiKey] = useState("")
+  const [useCustomKey, setUseCustomKey] = useState(false)
 
   const handleGameStart = () => {
     setGameStarted(true)
-    setCurrentComment("¡Excelente! Comencemos esta partida. Tienes las blancas, ¡haz tu primer movimiento!")
+    setCurrentComment(t.startGameComment)
   }
-
+ 
   const handleGameEnd = () => {
     setGameEnded(true)
+  }
+
+  const handleAIComment = (comment: string) => {
+    console.log('📝 Recibiendo comentario en GamePage:', comment);
+    setCurrentComment(comment)
+    console.log('📝 Estado currentComment actualizado a:', comment);
   }
 
   const handleGameReset = () => {
@@ -45,21 +57,24 @@ export default function GamePage() {
           <Link href="/">
             <Button variant="ghost" className="text-white hover:bg-white/10">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al inicio
+              {t.backToHome}
             </Button>
           </Link>
 
-          <h1 className="text-3xl font-bold text-white">ChessWithIA</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-white">{t.title}</h1>
+            <LanguageSelector />
+          </div>
 
           <Badge variant="secondary" className="bg-purple-600 text-white">
             <Brain className="w-4 h-4 mr-1" />
-            IA Activa
+            {t.aiActive}
           </Badge>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Settings Panel */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
             <SettingsPanel
               difficulty={difficulty}
               attitude={attitude}
@@ -68,6 +83,17 @@ export default function GamePage() {
               gameStarted={gameStarted}
               onGameStart={handleGameStart}
               onGameReset={handleGameReset}
+              canStart={!useCustomKey || (useCustomKey && userApiKey.length > 0)}
+              language={language}
+            />
+            
+            <ApiKeyConfig
+              userApiKey={userApiKey}
+              useCustomKey={useCustomKey}
+              onApiKeyChange={setUserApiKey}
+              onUseCustomKeyChange={setUseCustomKey}
+              gameStarted={gameStarted}
+              language={language}
             />
           </div>
 
@@ -75,49 +101,20 @@ export default function GamePage() {
           <div className="lg:col-span-2">
             <Card className="bg-white/10 backdrop-blur-md border-white/20">
               <CardHeader>
-                <CardTitle className="text-white text-center">Tablero de Ajedrez</CardTitle>
+                <CardTitle className="text-white text-center">{t.chessBoard}</CardTitle>
               </CardHeader>
               <CardContent className="flex justify-center">
                 <GameBoard
                   gameStarted={gameStarted}
+                  difficulty={difficulty}
+                  attitude={attitude}
+                  language={language}
                   onMove={(move) => {
                     setMoveHistory([...moveHistory, move])
-
-                    // Comentarios más específicos según la actitud y el movimiento
-                    setTimeout(() => {
-                      const moveResponses = {
-                        amistosa: [
-                          "¡Excelente movimiento! Me gusta tu estilo 😊",
-                          "Interesante estrategia, veamos cómo continúas 👍",
-                          "Buen desarrollo de piezas, sigues mejorando 🎯",
-                          "Ese movimiento muestra que estás pensando bien ✨",
-                        ],
-                        sarcástica: [
-                          "¿En serio? Bueno, he visto movimientos peores... 😏",
-                          "Interesante elección... aunque yo habría jugado mejor 🙄",
-                          "Veo que sigues mi consejo de jugar de forma... creativa 😈",
-                          "Ah, la clásica jugada de 'veamos qué pasa' 🤨",
-                        ],
-                        técnica: [
-                          "Movimiento sólido. Controlas el centro efectivamente.",
-                          "Desarrollo correcto según los principios de apertura.",
-                          "Buena coordinación de piezas en el flanco de rey.",
-                          "Estructura de peones mejorada con esa jugada.",
-                        ],
-                        épica: [
-                          "¡El destino del reino se decide con cada jugada! ⚔️",
-                          "¡Valiente guerrero! Pero la batalla apenas comienza 🛡️",
-                          "¡Por el honor del tablero! Tu coraje es admirable 👑",
-                          "¡Las fuerzas del ajedrez se agitan con tu movimiento! ⚡",
-                        ],
-                      }
-
-                      const responses = moveResponses[attitude as keyof typeof moveResponses]
-                      const randomResponse = responses[Math.floor(Math.random() * responses.length)]
-                      setCurrentComment(randomResponse)
-                    }, 1000)
                   }}
                   onGameEnd={handleGameEnd}
+                  onAIComment={handleAIComment}
+                  customApiKey={useCustomKey ? userApiKey : undefined}
                 />
               </CardContent>
             </Card>
@@ -125,14 +122,22 @@ export default function GamePage() {
 
           {/* AI Comments */}
           <div className="lg:col-span-1">
-            <IACommentBox comment={currentComment} attitude={attitude} gameStarted={gameStarted} />
+            <IACommentBox comment={currentComment} attitude={attitude} gameStarted={gameStarted} language={language} />
           </div>
         </div>
 
         {/* Game Summary */}
         {gameEnded && (
           <div className="mt-8">
-            <GameSummary moveHistory={moveHistory} difficulty={difficulty} attitude={attitude} />
+            <GameSummary 
+              moveHistory={moveHistory} 
+              difficulty={difficulty} 
+              attitude={attitude}
+              gameResult="victory"
+              finalFen=""
+              customApiKey={useCustomKey ? userApiKey : undefined}
+              language={language}
+            />
           </div>
         )}
       </div>
