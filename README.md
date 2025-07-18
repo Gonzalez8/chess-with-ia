@@ -44,8 +44,10 @@ Follow these instructions to set up and run the project on your local machine.
 
 ### Prerequisites
 
-- Node.js (v18 or later)
+- Node.js (v20.11.0 or later)
 - pnpm (or npm/yarn)
+
+**Note:** This project includes an `.nvmrc` file. If you use [nvm](https://github.com/nvm-sh/nvm), you can run `nvm use` in the project root to automatically switch to the correct Node.js version.
 
 ### Installation
 
