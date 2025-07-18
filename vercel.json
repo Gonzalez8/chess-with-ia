@@ -1,4 +1,4 @@
 {
   "buildCommand": "./build.sh",
-  "installCommand": "echo 'Install handled by build script'"
+  "installCommand": "npm ci --include=dev"
 }
