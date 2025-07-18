@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm ci",
+  "buildCommand": "./build.sh",
+  "installCommand": "echo 'Install handled by build script'",
   "functions": {
     "app/api/**/*.ts": {
       "runtime": "nodejs18.x"
