@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "functions": {
     "app/api/**/*.ts": {
       "runtime": "nodejs18.x"
